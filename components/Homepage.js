@@ -21,7 +21,7 @@ const Homepage = () => {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        backgroundColor: "whitesmoke", 
+        backgroundColor: "whitesmoke",
       }}
     >
       <Container component="main" maxWidth="xs">
@@ -31,10 +31,10 @@ const Homepage = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            backgroundColor: "white", 
+            backgroundColor: "white",
             borderRadius: "8px",
-            padding: "24px", 
-            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+            padding: "24px",
+            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
           }}
         >
           <Typography variant="h5" component="h1">
@@ -69,7 +69,7 @@ const Homepage = () => {
                     backgroundColor: "#EFD01B",
                     color: "black",
                     textTransform: "capitalize",
-                  }} 
+                  }}
                   type="submit"
                   fullWidth
                   disabled={isSubmitting}
