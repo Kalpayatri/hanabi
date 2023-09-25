@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   TextField,
   Button,
@@ -11,42 +11,97 @@ import { Formik, Form, Field } from "formik";
 import { useRouter } from "next/router";
 import * as Yup from "yup";
 
-const validationFormSchema = Yup.object().shape({
-  phoneNumber: Yup.string()
-    .required("Phone Number is required")
-    .matches(/^[0-9]*$/, "Phone Number must contain only numbers"),
-  email: Yup.string()
-    .required("Email is required")
-    .email("Invalid email address"),
-  name: Yup.string().required("Name is required"),
-  dob: Yup.string().required("Date of Birth is required"),
-});
+const getValidationSchema = (isEdit) => {
+  return Yup.object().shape({
+    phoneNumber: Yup.string()
+      .required("Phone Number is required")
+      .matches(/^[0-9]*$/, "Phone Number must contain only numbers"),
+    email: isEdit
+      ? Yup.string().email("Invalid email address")
+      : Yup.string()
+          .required("Email is required")
+          .email("Invalid email address"),
+    name: Yup.string().required("Name is required"),
+    dateOfBirth: Yup.string().required("Date of Birth is required"),
+  });
+};
 
 const FormPage = () => {
   const router = useRouter();
   const { username } = router.query;
 
+  const [userData, setUserData] = useState(null);
+  const [isEdit, setIsEdit] = useState(false);
+
+  useEffect(() => {
+    if (username) {
+      const fetchUserData = async () => {
+        try {
+          const response = await fetch(
+            `http://localhost:8000/users/${username}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data);
+            setIsEdit(true);
+          } else {
+            setIsEdit(false);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          setIsEdit(false);
+        }
+      };
+      fetchUserData();
+    }
+  }, [username]);
+
   const initialFormData = {
+    username: userData?.username || "",
+    phoneNumber: userData?.phoneNumber || "",
+    email: userData?.email || "",
+    name: userData?.name || "",
+    dateOfBirth: userData?.dateOfBirth || "",
+  };
+
+  const initialFormDataForNewUser = {
+    username: "",
     phoneNumber: "",
     email: "",
     name: "",
-    dob: "",
+    dateOfBirth: "", 
   };
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const response = await fetch("http://localhost:8000/users/register", {
-        method: "POST",
+      const url = isEdit
+        ? `http://localhost:8000/users/${username}`
+        : "http://localhost:8000/users/register";
+
+      const method = isEdit ? "PUT" : "POST";
+
+      const updatedUser = {
+        ...values,
+        username,
+      };
+
+      if (values.email === "" || values.email === userData?.email) {
+        delete updatedUser.email;
+      }
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(updatedUser),
       });
 
       if (response.ok) {
         router.push(`/result?username=${username}`);
       } else {
-        console.error("Error:", response.statusText);
+        const errorData = await response.json();
+        console.error("Error:", errorData.message);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -79,11 +134,11 @@ const FormPage = () => {
           }}
         >
           <Typography variant="h5" component="h1">
-            Register
+            {isEdit ? "Edit Profile" : "Register"}
           </Typography>
           <Formik
-            initialValues={initialFormData}
-            validationSchema={validationFormSchema}
+            initialValues={isEdit ? initialFormData : initialFormDataForNewUser}
+            validationSchema={getValidationSchema(isEdit)}
             onSubmit={handleSubmit}
           >
             {({ isSubmitting, touched, errors }) => (
@@ -108,6 +163,7 @@ const FormPage = () => {
                     fullWidth
                     error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
+                    disabled={isEdit} 
                   />
                 </Box>
                 <Box mb={2}>
@@ -124,12 +180,12 @@ const FormPage = () => {
                 <Box mb={2}>
                   <Field
                     as={TextField}
-                    name="dob"
+                    name="dateOfBirth"
                     label="Date of Birth"
                     variant="outlined"
                     fullWidth
-                    error={touched.dob && Boolean(errors.dob)}
-                    helperText={touched.dob && errors.dob}
+                    error={touched.dateOfBirth && Boolean(errors.dateOfBirth)}
+                    helperText={touched.dateOfBirth && errors.dateOfBirth}
                   />
                 </Box>
                 <div
@@ -146,17 +202,31 @@ const FormPage = () => {
                     fullWidth
                     disabled={isSubmitting}
                   >
-                    Submit
+                    {isEdit ? "Update" : "Submit"}
                   </Button>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    fullWidth
-                    style={{ marginLeft: "8px" }} 
-                    onClick={() => router.push("/")}
-                  >
-                    Cancel
-                  </Button>
+
+                  {isEdit && (
+                    <Button
+                      variant="contained"
+                      color="error"
+                      fullWidth
+                      style={{ marginLeft: "8px" }}
+                      onClick={() => router.push("/")}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                  {!isEdit && (
+                    <Button
+                      variant="contained"
+                      color="error"
+                      fullWidth
+                      style={{ marginLeft: "8px" }}
+                      onClick={() => router.push("/")}
+                    >
+                      Cancel
+                    </Button>
+                  )}
                 </div>
               </Form>
             )}

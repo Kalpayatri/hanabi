@@ -32,13 +32,13 @@ const ResultPage = () => {
             boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <Typography variant="h3" gutterBottom color="green">
+          <Typography variant="h3" gutterBottom color="green" >
             Congratulations!
           </Typography>
           <Typography variant="body1" paragraph>
             Your form has been submitted successfully.
           </Typography>
-          <Link href="/" passHref>
+          <Link href="/">
             <Button
               variant="contained"
               style={{
